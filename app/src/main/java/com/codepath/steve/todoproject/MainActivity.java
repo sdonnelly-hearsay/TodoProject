@@ -1,11 +1,11 @@
 package com.codepath.steve.todoproject;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 
@@ -15,13 +15,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements EditItemFragment.OnCompleteListener {
 
+    Button btnAddItem;
     ArrayList<String> items;
     ArrayAdapter<String> itemsAdapter;
     ListView lvItems;
-
-    private final int EDIT_REQUEST_CODE = 111;
 
     private int editPosition;
 
@@ -31,21 +30,17 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         readItems();
         lvItems = findViewById(R.id.lvItems);
+        btnAddItem = findViewById(R.id.btnAddItem);
         itemsAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, items);
         lvItems.setAdapter(itemsAdapter);
-        items.add("First Item");
-        items.add("Second Item");
         setupListViewListener();
-    }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == RESULT_OK && requestCode == EDIT_REQUEST_CODE) {
-            String editedString = data.getStringExtra(EditItemActivity.EDIT_ITEM);
-            items.set(editPosition, editedString);
-            itemsAdapter.notifyDataSetChanged();
-            writeItems();
-        }
+        btnAddItem.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onAddItem(view);
+            }
+        });
     }
 
     public void onAddItem(View v) {
@@ -62,9 +57,8 @@ public class MainActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> adapter, View item, int pos, long id) {
                 editPosition = pos;
 
-                Intent intent = new Intent(MainActivity.this, EditItemActivity.class);
-                intent.putExtra(EditItemActivity.EDIT_ITEM, items.get(pos));
-                startActivityForResult(intent, EDIT_REQUEST_CODE);
+                EditItemFragment itemFragment = EditItemFragment.newInstance(items.get(pos));
+                itemFragment.show(getSupportFragmentManager(), "editItemFragment");
             }
         });
 
@@ -97,5 +91,12 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void onComplete(String itemText) {
+        items.set(editPosition, itemText);
+        itemsAdapter.notifyDataSetChanged();
+        writeItems();
     }
 }
